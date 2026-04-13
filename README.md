@@ -1,5 +1,8 @@
 ## Hi there 👋
 
+https://pages.github.sec.samsung.net/woogeun-kim/MKDocs/
+
+https://pages.github.sec.samsung.net/woogeun-kim/MKDocs-Slides/curriculum-intro/16
 <!--
 **testhuh/testhuh** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
