@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart City 회의실 예약 대시보드</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#f0f2f5;font-size:12px;color:#222;}
+.sidebar{position:fixed;top:0;left:0;width:195px;height:100vh;background:#fff;border-right:1px solid #ddd;overflow-y:auto;z-index:50;padding:14px 12px 40px;}
+.sidebar-logo{display:flex;align-items:center;gap:7px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #eee;}
+.sb-icon{width:26px;height:26px;background:#1428A0;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;}
+.sb-title{font-size:12px;font-weight:700;color:#1a1a1a;line-height:1.3;}
+.sb-title span{display:block;font-size:10px;font-weight:400;color:#888;}
+.sb-section{margin-bottom:14px;}
+.sb-label{font-size:11px;font-weight:700;color:#555;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;}
+.sb-label small{color:#999;font-weight:400;}
+.sb-select{width:100%;padding:6px 8px;border:1px solid #d0d0d0;border-radius:5px;font-size:11px;font-family:inherit;background:#fafafa;color:#333;outline:none;}
+.cb-row{display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer;}
+.cb-row input[type=checkbox]{accent-color:#1428A0;width:13px;height:13px;cursor:pointer;}
+.cb-row label{font-size:11px;color:#333;cursor:pointer;flex:1;}
+.sb-btn-row{display:flex;gap:5px;margin-top:7px;}
+.sb-btn{flex:1;padding:5px 0;border:1px solid #d0d0d0;border-radius:4px;background:#fff;font-size:10px;color:#555;cursor:pointer;font-family:inherit;}
+.sb-btn:hover{background:#f0f0f0;}
+.main{margin-left:195px;min-height:100vh;}
+.top-header{background:#fff;border-bottom:1px solid #ddd;padding:10px 20px 0;position:sticky;top:0;z-index:40;}
+.header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.header-label{font-size:10px;color:#1428A0;font-weight:700;margin-bottom:3px;}
+.header-title{font-size:17px;font-weight:800;color:#111;}
+.header-subtitle{font-size:11px;color:#888;margin-top:2px;}
+.header-meta{display:flex;gap:8px;align-items:center;}
+.meta-box{background:#f5f7ff;border:1px solid #dce3f8;border-radius:6px;padding:5px 10px;text-align:center;min-width:70px;}
+.meta-box .mb-label{font-size:9px;color:#888;margin-bottom:1px;}
+.meta-box .mb-val{font-size:13px;font-weight:800;color:#1428A0;}
+.meta-box.red .mb-val{color:#e53935;}
+.meta-box.green .mb-val{color:#2e7d32;}
+.kpi-row{display:flex;gap:10px;padding:0 0 10px;}
+.kpi-card{background:#fafafa;border:1px solid #eee;border-radius:7px;padding:10px 14px;min-width:130px;flex:1;}
+.kpi-card .kc-label{font-size:10px;color:#888;margin-bottom:4px;}
+.kpi-card .kc-val{font-size:22px;font-weight:800;color:#111;line-height:1;}
+.kpi-card .kc-diff{font-size:10px;margin-top:4px;}
+.kpi-card .kc-diff.up{color:#2e7d32;}
+.kpi-card .kc-diff.dn{color:#e53935;}
+.kpi-card .kc-diff.eq{color:#888;}
+.kpi-card.hl{background:#f5f7ff;border-color:#c5cef5;}
+.kpi-card.hl .kc-val{color:#1428A0;}
+.tab-bar{display:flex;gap:0;padding:0;background:#fff;border-bottom:2px solid #e8e8e8;}
+.tab-btn{padding:10px 16px;border:none;background:none;font-size:12px;color:#888;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.tab-btn:hover{color:#1428A0;}
+.tab-btn.active{color:#1428A0;font-weight:700;border-bottom-color:#1428A0;}
+.tab-content{display:none;padding:16px 20px 40px;}
+.tab-content.active{display:block;}
+.sbox{background:#fff;border:1px solid #e4e4e4;border-radius:8px;margin-bottom:14px;overflow:hidden;}
+.shead{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f0f0f0;}
+.shead h3{font-size:13px;font-weight:700;color:#111;}
+.shead p{font-size:11px;color:#888;margin-top:1px;}
+.sbody{padding:12px 14px;}
+.scnt{font-size:11px;color:#888;}
+.sub-kpi-row{display:flex;gap:10px;padding:12px 14px;}
+.sk{background:#f8f9fc;border:1px solid #eee;border-radius:6px;padding:9px 12px;flex:1;}
+.sk .skl{font-size:10px;color:#999;margin-bottom:3px;}
+.sk .skv{font-size:18px;font-weight:800;color:#111;}
+.sk .sks{font-size:10px;color:#777;margin-top:2px;}
+.sk.bl{background:#f0f4ff;border-color:#c5cef5;}
+.sk.bl .skv{color:#1428A0;}
+.tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;}
+.t-bl{background:#e3eaff;color:#1428A0;}
+.t-gn{background:#e8f5e9;color:#2e7d32;}
+.t-rd{background:#fce4ec;color:#c62828;}
+.t-or{background:#fff3e0;color:#e65100;}
+.t-gy{background:#f0f0f0;color:#666;}
+.t-pu{background:#f3e5f5;color:#6a1b9a;}
+.dt{width:100%;border-collapse:collapse;font-size:11px;}
+.dt th{background:#f8f9fc;padding:7px 10px;text-align:left;color:#666;font-weight:600;border-bottom:1px solid #eee;white-space:nowrap;}
+.dt td{padding:7px 10px;border-bottom:1px solid #f5f5f5;vertical-align:middle;}
+.dt tr:hover td{background:#fafbff;}
+.dt td .rn{font-weight:700;color:#1428A0;}
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;padding:12px 14px;}
+.rc{border:1px solid #e4e4e4;border-radius:7px;padding:10px 12px;cursor:pointer;transition:all .15s;}
+.rc:hover{border-color:#1428A0;box-shadow:0 2px 8px rgba(20,40,160,.08);}
+.rc .rcn{font-size:12px;font-weight:700;color:#222;margin-bottom:4px;}
+.rc .rcl{font-size:10px;color:#999;margin-bottom:6px;}
+.rc.av{background:#f5fff7;border-color:#a5d6a7;}
+.rc.bs{background:#fff5f5;border-color:#ef9a9a;}
+.rc.pt{background:#fffde7;border-color:#ffe082;}
+.bar-item{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.bl{min-width:90px;font-size:11px;color:#444;flex-shrink:0;}
+.bt{flex:1;height:14px;background:#f0f0f0;border-radius:3px;overflow:hidden;display:flex;}
+.bf{height:100%;border-radius:3px;}
+.bv{min-width:30px;font-size:11px;font-weight:700;color:#333;text-align:right;}
+.mt{width:100%;border-collapse:collapse;font-size:11px;}
+.mt th{background:#f8f9fc;padding:6px 10px;text-align:center;color:#666;font-weight:600;border:1px solid #eee;}
+.mt td{padding:6px 10px;border:1px solid #f0f0f0;text-align:center;vertical-align:middle;}
+.mt td.win{background:#e8f5e9;font-weight:700;color:#2e7d32;}
+.tl-hdr{display:flex;border-bottom:1px solid #eee;font-size:10px;color:#999;padding:0 0 6px 105px;}
+.tl-hr{flex:1;text-align:center;}
+.tl-row{display:flex;align-items:center;margin-bottom:6px;}
+.tl-lbl{width:105px;font-size:11px;color:#555;font-weight:600;flex-shrink:0;}
+.tl-trk{flex:1;height:22px;background:#f5f5f5;border-radius:4px;position:relative;overflow:hidden;}
+.tb{position:absolute;top:2px;height:18px;border-radius:3px;display:flex;align-items:center;padding:0 6px;font-size:10px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;}
+.tb-r{background:#ef5350;}
+.tb-m{background:#1428A0;}
+.oxe-row{display:flex;gap:12px;padding:12px 14px;}
+.ob{flex:1;background:#f8f9fc;border:1px solid #eee;border-radius:6px;padding:10px 14px;text-align:center;}
+.ov{font-size:24px;font-weight:900;}
+.ol{font-size:10px;color:#888;margin-top:3px;}
+.sum-li{list-style:none;padding:12px 14px;}
+.sum-li li{padding:5px 0 5px 14px;font-size:11px;color:#444;border-bottom:1px solid #f5f5f5;position:relative;line-height:1.6;}
+.sum-li li::before{content:"•";position:absolute;left:2px;color:#1428A0;font-weight:700;}
+.bc-cards{display:flex;gap:10px;padding:12px 14px;}
+.bcc{flex:1;border:1px solid #e4e4e4;border-radius:7px;overflow:hidden;}
+.bch{padding:8px 12px;display:flex;align-items:center;justify-content:space-between;}
+.bch.blue{background:#1428A0;color:#fff;}
+.bch.gray{background:#424242;color:#fff;}
+.bch.yellow{background:#f9a825;color:#fff;}
+.bcn{font-size:13px;font-weight:800;}
+.bcnum{font-size:22px;font-weight:900;}
+.bcb{padding:10px 12px;background:#fafafa;}
+.bcr{display:flex;justify-content:space-between;padding:2px 0;font-size:11px;color:#555;}
+.p2p-kpi{display:flex;gap:10px;padding:12px 14px;}
+.p2pb{flex:1;background:#f8f9fc;border:1px solid #eee;border-radius:6px;padding:8px 12px;text-align:center;}
+.p2pb .pv{font-size:20px;font-weight:800;color:#111;}
+.p2pb .pl{font-size:10px;color:#999;margin-top:1px;}
+.p2pb.hl{background:#e3eaff;border-color:#c5cef5;}
+.p2pb.hl .pv{color:#1428A0;}
+.gap-t{width:100%;font-size:11px;border-collapse:collapse;}
+.gap-t th{background:#f0f0f0;padding:6px 10px;border:1px solid #e0e0e0;font-weight:600;color:#555;}
+.gap-t td{padding:6px 10px;border:1px solid #f0f0f0;vertical-align:top;}
+.gap-t td.pr{font-weight:700;color:#333;background:#fafafa;white-space:nowrap;}
+.gap-t td.best{background:#e8f5e9;font-weight:600;color:#2e7d32;}
+.cbadge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;}
+.cbn{background:#e3f2fd;color:#1565c0;}
+.cbc{background:#fce4ec;color:#c62828;}
+.cbch{background:#fff8e1;color:#f57f17;}
+.divider{height:1px;background:#f0f0f0;margin:0 14px;}
+.sx{overflow-x:auto;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sb-icon">SC</div>
+    <div class="sb-title">회의실 대시보드<span>Smart City Portal</span></div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">날짜 선택</div>
+    <select class="sb-select">
+      <option>W21'26 (이번 주)</option>
+      <option>W20'26 (지난 주)</option>
+      <option>W19'26</option>
+    </select>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">건물 <small id="bldCnt">3/3</small></div>
+    <div class="cb-row"><input type="checkbox" id="cbG" checked onchange="filterUpdate()"><label for="cbG">G동</label><span style="font-size:10px;color:#999;margin-left:auto;">26건</span></div>
+    <div class="cb-row"><input type="checkbox" id="cbD" checked onchange="filterUpdate()"><label for="cbD">D동</label><span style="font-size:10px;color:#999;margin-left:auto;">18건</span></div>
+    <div class="cb-row"><input type="checkbox" id="cbE" checked onchange="filterUpdate()"><label for="cbE">E동</label><span style="font-size:10px;color:#999;margin-left:auto;">12건</span></div>
+    <div class="sb-btn-row">
+      <button class="sb-btn" onclick="chkAll(['cbG','cbD','cbE'],true)">전체 선택</button>
+      <button class="sb-btn" onclick="chkAll(['cbG','cbD','cbE'],false)">전체 해제</button>
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">층 <small id="flrCnt">4/4</small></div>
+    <div class="cb-row"><input type="checkbox" id="f1" checked onchange="filterUpdate()"><label for="f1">1층</label></div>
+    <div class="cb-row"><input type="checkbox" id="f2" checked onchange="filterUpdate()"><label for="f2">2층</label></div>
+    <div class="cb-row"><input type="checkbox" id="f3" checked onchange="filterUpdate()"><label for="f3">3층</label></div>
+    <div class="cb-row"><input type="checkbox" id="f4" checked onchange="filterUpdate()"><label for="f4">4층</label></div>
+    <div class="sb-btn-row">
+      <button class="sb-btn" onclick="chkAll(['f1','f2','f3','f4'],true)">전체 선택</button>
+      <button class="sb-btn" onclick="chkAll(['f1','f2','f3','f4'],false)">전체 해제</button>
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">회의실 타입 <small id="typCnt">5/5</small></div>
+    <div class="cb-row"><input type="checkbox" id="tN" checked onchange="filterUpdate()"><label for="tN">일반 회의실</label></div>
+    <div class="cb-row"><input type="checkbox" id="tV" checked onchange="filterUpdate()"><label for="tV">화상 회의실</label></div>
+    <div class="cb-row"><input type="checkbox" id="tL" checked onchange="filterUpdate()"><label for="tL">강의장</label></div>
+    <div class="cb-row"><input type="checkbox" id="tX" checked onchange="filterUpdate()"><label for="tX">외부협력</label></div>
+    <div class="cb-row"><input type="checkbox" id="tM" checked onchange="filterUpdate()"><label for="tM">복합 공간</label></div>
+    <div class="sb-btn-row">
+      <button class="sb-btn" onclick="chkAll(['tN','tV','tL','tX','tM'],true)">전체 선택</button>
+      <button class="sb-btn" onclick="chkAll(['tN','tV','tL','tX','tM'],false)">전체 해제</button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="top-header">
+    <div class="header-top">
+      <div>
+        <div class="header-label">Smart City 회의실 현황 대시보드</div>
+        <div class="header-title">건물별 회의실 예약 현황 및 분석</div>
+        <div class="header-subtitle">W21'26 기준 · 건물 G/D/E동 전체 · 통합 예약 현황 56건 · 변경 3건</div>
+      </div>
+      <div class="header-meta">
+        <div class="meta-box"><div class="mb-label">기준 주차</div><div class="mb-val">W21</div></div>
+        <div class="meta-box"><div class="mb-label">전주</div><div class="mb-val" style="color:#888;">W20</div></div>
+        <div class="meta-box green"><div class="mb-label">예약률</div><div class="mb-val">72%</div></div>
+        <div class="meta-box red"><div class="mb-label">대기</div><div class="mb-val">+5</div></div>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="kc-label">전체 회의실</div><div class="kc-val">56</div><div class="kc-diff up">▲ 전주 대비 +2건</div></div>
+      <div class="kpi-card"><div class="kc-label">G동 예약</div><div class="kc-val">26</div><div class="kc-diff dn">▼ 전주 대비 -1건</div></div>
+      <div class="kpi-card"><div class="kc-label">D동 예약</div><div class="kc-val">18</div><div class="kc-diff up">▲ 전주 대비 +1건</div></div>
+      <div class="kpi-card"><div class="kc-label">E동 예약</div><div class="kc-val">12</div><div class="kc-diff eq">→ 전주 동일</div></div>
+      <div class="kpi-card hl"><div class="kc-label">예약 가능 (현재)</div><div class="kc-val">G동 +8</div><div class="kc-diff" style="color:#888;">O14 · X4 · =17 비교</div></div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="swTab('t1',this)">예약 현황</button>
+      <button class="tab-btn" onclick="swTab('t2',this)">회의실별</button>
+      <button class="tab-btn" onclick="swTab('t3',this)">건물 비교</button>
+      <button class="tab-btn" onclick="swTab('t4',this)">이용 분석</button>
+      <button class="tab-btn" onclick="swTab('t5',this)">변경 내역</button>
+      <button class="tab-btn" onclick="swTab('t6',this)">상세 분석</button>
+    </div>
+  </div>
+
+  <!-- TAB 1 예약 현황 -->
+  <div id="t1" class="tab-content active">
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button id="btG" onclick="swBld('G',this)" style="padding:6px 18px;border:1px solid #1428A0;border-radius:6px;background:#fff;color:#1428A0;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">G동</button>
+      <button id="btD" onclick="swBld('D',this)" style="padding:6px 18px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#888;font-size:12px;cursor:pointer;font-family:inherit;">D동</button>
+      <button id="btE" onclick="swBld('E',this)" style="padding:6px 18px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#888;font-size:12px;cursor:pointer;font-family:inherit;">E동</button>
+    </div>
+
+    <div id="secG">
+      <div class="sbox">
+        <div class="shead"><div><h3>G동 · 예약 현황</h3><p>G동 전체 회의실 예약 가능 여부를 확인합니다.</p></div><span class="scnt">26건</span></div>
+        <div class="sub-kpi-row">
+          <div class="sk bl"><div class="skl">총 예약</div><div class="skv">26</div><div class="sks">G동 전체</div></div>
+          <div class="sk"><div class="skl">적용 회의실</div><div class="skv">19</div><div class="sks">일반·화상·강의장</div></div>
+          <div class="sk"><div class="skl">예약 가능</div><div class="skv">8</div><div class="sks">지금 즉시 이용</div></div>
+          <div class="sk bl"><div class="skl">최대 수용</div><div class="skv">30명</div><div class="sks">강의장 기준</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="room-grid">
+          <div class="rc av" onclick="openRes('G동 1층 회의실 1')"><div class="rcn">회의실 1</div><div class="rcl">G동 1층</div><div style="margin-bottom:5px;"><span class="tag t-gn">예약 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 6명 · 일반</div></div>
+          <div class="rc bs"><div class="rcn">화상회의실 1</div><div class="rcl">G동 1층</div><div style="margin-bottom:5px;"><span class="tag t-rd">사용 중</span></div><div style="font-size:10px;color:#555;">👥 최대 8명 · 화상</div></div>
+          <div class="rc av" onclick="openRes('G동 2층 회의실 2')"><div class="rcn">회의실 2</div><div class="rcl">G동 2층</div><div style="margin-bottom:5px;"><span class="tag t-gn">예약 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 4명 · 일반</div></div>
+          <div class="rc pt"><div class="rcn">회의실 3</div><div class="rcl">G동 2층</div><div style="margin-bottom:5px;"><span class="tag t-or">부분 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 10명 · 일반</div></div>
+          <div class="rc bs"><div class="rcn">대회의실</div><div class="rcl">G동 3층</div><div style="margin-bottom:5px;"><span class="tag t-rd">사용 중</span></div><div style="font-size:10px;color:#555;">👥 최대 20명 · 강의장</div></div>
+          <div class="rc av" onclick="openRes('G동 4층 대회의실')"><div class="rcn">대회의실</div><div class="rcl">G동 4층</div><div style="margin-bottom:5px;"><span class="tag t-gn">예약 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 20명 · 강의장</div></div>
+          <div class="rc av" onclick="openRes('G동 4층 회의실 1')"><div class="rcn">회의실 1</div><div class="rcl">G동 4층</div><div style="margin-bottom:5px;"><span class="tag t-gn">예약 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 6명 · 일반</div></div>
+          <div class="rc pt"><div class="rcn">회의실 2</div><div class="rcl">G동 4층</div><div style="margin-bottom:5px;"><span class="tag t-or">부분 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 8명 · 화상</div></div>
+        </div>
+        <div class="divider" style="margin:0;"></div>
+        <div class="sx" style="padding:12px 14px;">
+          <table class="dt">
+            <thead><tr><th>건물</th><th>층</th><th>회의실</th><th>타입</th><th>수용</th><th>상태</th><th>예약자</th><th>시간</th><th>목적</th><th>액션</th></tr></thead>
+            <tbody>
+              <tr><td>G동</td><td>1층</td><td class="rn">화상회의실 1</td><td><span class="tag t-bl">화상</span></td><td>8명</td><td><span class="tag t-rd">사용 중</span></td><td>김○○ 팀</td><td>14:00~15:30</td><td>주간 리뷰</td><td><button style="padding:3px 8px;background:#f0f0f0;border:none;border-radius:4px;cursor:pointer;font-size:10px;">상세</button></td></tr>
+              <tr><td>G동</td><td>2층</td><td class="rn">회의실 3</td><td><span class="tag t-gy">일반</span></td><td>10명</td><td><span class="tag t-or">부분 가능</span></td><td>박○○ 팀</td><td>15:00~16:00</td><td>기획 미팅</td><td><button onclick="openRes('G동 2층 회의실 3')" style="padding:3px 8px;background:#1428A0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;">예약</button></td></tr>
+              <tr><td>G동</td><td>3층</td><td class="rn">대회의실</td><td><span class="tag t-pu">강의장</span></td><td>20명</td><td><span class="tag t-rd">사용 중</span></td><td>인사팀</td><td>13:00~17:00</td><td>워크샵</td><td><button style="padding:3px 8px;background:#f0f0f0;border:none;border-radius:4px;cursor:pointer;font-size:10px;">대기</button></td></tr>
+              <tr><td>G동</td><td>4층</td><td class="rn">회의실 1</td><td><span class="tag t-gy">일반</span></td><td>6명</td><td><span class="tag t-gn">예약 가능</span></td><td>—</td><td>—</td><td>—</td><td><button onclick="openRes('G동 4층 회의실 1')" style="padding:3px 8px;background:#1428A0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;">예약</button></td></tr>
+              <tr><td>G동</td><td>4층</td><td class="rn">회의실 2</td><td><span class="tag t-bl">화상</span></td><td>8명</td><td><span class="tag t-or">부분 가능</span></td><td>이○○ 팀</td><td>16:00~17:00</td><td>외부 미팅</td><td><button onclick="openRes('G동 4층 회의실 2')" style="padding:3px 8px;background:#1428A0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;">예약</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="secD" style="display:none;">
+      <div class="sbox">
+        <div class="shead"><div><h3>D동 · 예약 현황</h3><p>D동 전체 회의실 예약 가능 여부를 확인합니다.</p></div><span class="scnt">18건</span></div>
+        <div class="sub-kpi-row">
+          <div class="sk bl"><div class="skl">총 예약</div><div class="skv">18</div><div class="sks">D동 전체</div></div>
+          <div class="sk"><div class="skl">외부협력실</div><div class="skv">5</div><div class="sks">협력사 미팅 전용</div></div>
+          <div class="sk"><div class="skl">예약 가능</div><div class="skv">6</div><div class="sks">지금 즉시 이용</div></div>
+          <div class="sk bl"><div class="skl">최대 수용</div><div class="skv">12명</div><div class="sks">대형 회의실 기준</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="room-grid">
+          <div class="rc av" onclick="openRes('D동 1층 회의실 1')"><div class="rcn">회의실 1</div><div class="rcl">D동 1층</div><div style="margin-bottom:5px;"><span class="tag t-gn">예약 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 6명 · 일반</div></div>
+          <div class="rc bs"><div class="rcn">외부협력실 1</div><div class="rcl">D동 4층</div><div style="margin-bottom:5px;"><span class="tag t-rd">사용 중</span></div><div style="font-size:10px;color:#555;">👥 최대 8명 · 외부협력</div></div>
+          <div class="rc av" onclick="openRes('D동 2층 회의실 2')"><div class="rcn">회의실 2</div><div class="rcl">D동 2층</div><div style="margin-bottom:5px;"><span class="tag t-gn">예약 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 8명 · 일반</div></div>
+          <div class="rc pt"><div class="rcn">화상회의실</div><div class="rcl">D동 3층</div><div style="margin-bottom:5px;"><span class="tag t-or">부분 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 6명 · 화상</div></div>
+        </div>
+        <div class="divider" style="margin:0;"></div>
+        <div class="sx" style="padding:12px 14px;">
+          <table class="dt">
+            <thead><tr><th>건물</th><th>층</th><th>회의실</th><th>타입</th><th>수용</th><th>상태</th><th>예약자</th><th>시간</th><th>목적</th><th>액션</th></tr></thead>
+            <tbody>
+              <tr><td>D동</td><td>4층</td><td class="rn">외부협력실 1</td><td><span class="tag t-or">외부협력</span></td><td>8명</td><td><span class="tag t-rd">사용 중</span></td><td>전략팀</td><td>14:00~15:00</td><td>협력사 미팅</td><td><button style="padding:3px 8px;background:#f0f0f0;border:none;border-radius:4px;cursor:pointer;font-size:10px;">상세</button></td></tr>
+              <tr><td>D동</td><td>1층</td><td class="rn">회의실 1</td><td><span class="tag t-gy">일반</span></td><td>6명</td><td><span class="tag t-gn">예약 가능</span></td><td>—</td><td>—</td><td>—</td><td><button onclick="openRes('D동 1층 회의실 1')" style="padding:3px 8px;background:#1428A0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;">예약</button></td></tr>
+              <tr><td>D동</td><td>3층</td><td class="rn">화상회의실</td><td><span class="tag t-bl">화상</span></td><td>6명</td><td><span class="tag t-or">부분 가능</span></td><td>마케팅팀</td><td>10:00~11:00</td><td>화상 회의</td><td><button onclick="openRes('D동 3층 화상회의실')" style="padding:3px 8px;background:#1428A0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;">예약</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="secE" style="display:none;">
+      <div class="sbox">
+        <div class="shead"><div><h3>E동 · 예약 현황</h3><p>E동 전체 회의실 예약 가능 여부를 확인합니다.</p></div><span class="scnt">12건</span></div>
+        <div class="sub-kpi-row">
+          <div class="sk bl"><div class="skl">총 예약</div><div class="skv">12</div><div class="sks">E동 전체</div></div>
+          <div class="sk"><div class="skl">강의장</div><div class="skv">10</div><div class="sks">워크샵·교육 전용</div></div>
+          <div class="sk"><div class="skl">예약 가능</div><div class="skv">4</div><div class="sks">지금 즉시 이용</div></div>
+          <div class="sk bl"><div class="skl">최대 수용</div><div class="skv">30명</div><div class="sks">강의장 기준</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="room-grid">
+          <div class="rc bs"><div class="rcn">강의장 1</div><div class="rcl">E동 3층</div><div style="margin-bottom:5px;"><span class="tag t-rd">사용 중</span></div><div style="font-size:10px;color:#555;">👥 최대 30명 · 강의장</div></div>
+          <div class="rc av" onclick="openRes('E동 2층 강의장 2')"><div class="rcn">강의장 2</div><div class="rcl">E동 2층</div><div style="margin-bottom:5px;"><span class="tag t-gn">예약 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 20명 · 강의장</div></div>
+          <div class="rc av" onclick="openRes('E동 1층 회의실')"><div class="rcn">회의실</div><div class="rcl">E동 1층</div><div style="margin-bottom:5px;"><span class="tag t-gn">예약 가능</span></div><div style="font-size:10px;color:#555;">👥 최대 8명 · 일반</div></div>
+        </div>
+        <div class="divider" style="margin:0;"></div>
+        <div class="sx" style="padding:12px 14px;">
+          <table class="dt">
+            <thead><tr><th>건물</th><th>층</th><th>회의실</th><th>타입</th><th>수용</th><th>상태</th><th>예약자</th><th>시간</th><th>목적</th><th>액션</th></tr></thead>
+            <tbody>
+              <tr><td>E동</td><td>3층</td><td class="rn">강의장 1</td><td><span class="tag t-pu">강의장</span></td><td>30명</td><td><span class="tag t-rd">사용 중</span></td><td>인사팀</td><td>10:00~12:00</td><td>신입 교육</td><td><button style="padding:3px 8px;background:#f0f0f0;border:none;border-radius:4px;cursor:pointer;font-size:10px;">상세</button></td></tr>
+              <tr><td>E동</td><td>2층</td><td class="rn">강의장 2</td><td><span class="tag t-pu">강의장</span></td><td>20명</td><td><span class="tag t-gn">예약 가능</span></td><td>—</td><td>—</td><td>—</td><td><button onclick="openRes('E동 2층 강의장 2')" style="padding:3px 8px;background:#1428A0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;">예약</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2 회의실별 -->
+  <div id="t2" class="tab-content">
+    <div class="sbox">
+      <div class="shead"><div><h3>회의실별 상세 현황</h3><p>건물·층별 전체 회의실 현황 및 시간대별 예약 상태입니다.</p></div><span class="scnt">전체 56실</span></div>
+      <div style="padding:12px 14px;">
+        <div style="font-size:11px;font-weight:600;color:#555;margin-bottom:8px;">오늘 시간대별 예약 현황 (09:00 ~ 19:00)</div>
+        <div class="tl-hdr"><div class="tl-hr">9</div><div class="tl-hr">10</div><div class="tl-hr">11</div><div class="tl-hr">12</div><div class="tl-hr">13</div><div class="tl-hr">14</div><div class="tl-hr">15</div><div class="tl-hr">16</div><div class="tl-hr">17</div><div class="tl-hr">18</div></div>
+        <div style="margin-top:6px;">
+          <div class="tl-row"><div class="tl-lbl">G동 화상회의실1</div><div class="tl-trk"><div class="tb tb-r" style="left:50%;width:15%;">14~15:30</div></div></div>
+          <div class="tl-row"><div class="tl-lbl">G동 회의실3</div><div class="tl-trk"><div class="tb tb-r" style="left:60%;width:10%;">15~16</div></div></div>
+          <div class="tl-row"><div class="tl-lbl">G동 대회의실(3F)</div><div class="tl-trk"><div class="tb tb-r" style="left:40%;width:40%;">13~17</div></div></div>
+          <div class="tl-row"><div class="tl-lbl">G동 회의실2(4F)</div><div class="tl-trk"><div class="tb tb-m" style="left:70%;width:10%;">16~17 내예약</div></div></div>
+          <div class="tl-row"><div class="tl-lbl">D동 외부협력실</div><div class="tl-trk"><div class="tb tb-r" style="left:50%;width:10%;">14~15</div></div></div>
+          <div class="tl-row"><div class="tl-lbl">E동 강의장1</div><div class="tl-trk"><div class="tb tb-r" style="left:10%;width:20%;">10~12</div></div></div>
+        </div>
+        <div style="display:flex;gap:14px;margin-top:10px;font-size:10px;color:#666;">
+          <span><span style="background:#ef5350;display:inline-block;width:12px;height:10px;border-radius:2px;margin-right:3px;vertical-align:middle;"></span>예약됨</span>
+          <span><span style="background:#1428A0;display:inline-block;width:12px;height:10px;border-radius:2px;margin-right:3px;vertical-align:middle;"></span>내 예약</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="sx" style="padding:12px 14px;">
+        <table class="dt">
+          <thead><tr><th>회의실</th><th>건물</th><th>층</th><th>타입</th><th>수용</th><th>오전 가능</th><th>오후 가능</th><th>주간 예약률</th><th>상태</th><th>예약</th></tr></thead>
+          <tbody>
+            <tr><td><b>화상회의실 1</b></td><td>G동</td><td>1층</td><td><span class="tag t-bl">화상</span></td><td>8명</td><td><span class="tag t-gn">가능</span></td><td><span class="tag t-rd">불가</span></td><td><div style="background:#eee;border-radius:3px;height:8px;width:80px;overflow:hidden;display:inline-block;vertical-align:middle;"><div style="background:#1428A0;width:68%;height:100%;"></div></div> 68%</td><td><span class="tag t-rd">사용 중</span></td><td>—</td></tr>
+            <tr><td><b>대회의실(3F)</b></td><td>G동</td><td>3층</td><td><span class="tag t-pu">강의장</span></td><td>20명</td><td><span class="tag t-gn">가능</span></td><td><span class="tag t-rd">불가</span></td><td><div style="background:#eee;border-radius:3px;height:8px;width:80px;overflow:hidden;display:inline-block;vertical-align:middle;"><div style="background:#1428A0;width:85%;height:100%;"></div></div> 85%</td><td><span class="tag t-rd">사용 중</span></td><td>—</td></tr>
+            <tr><td><b>회의실 1(4F)</b></td><td>G동</td><td>4층</td><td><span class="tag t-gy">일반</span></td><td>6명</td><td><span class="tag t-gn">가능</span></td><td><span class="tag t-gn">가능</span></td><td><div style="background:#eee;border-radius:3px;height:8px;width:80px;overflow:hidden;display:inline-block;vertical-align:middle;"><div style="background:#66bb6a;width:30%;height:100%;"></div></div> 30%</td><td><span class="tag t-gn">예약 가능</span></td><td><button onclick="openRes('G동 4층 회의실 1')" style="padding:3px 10px;background:#1428A0;color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;">예약</button></td></tr>
+            <tr><td><b>외부협력실</b></td><td>D동</td><td>4층</td><td><span class="tag t-or">외부협력</span></td><td>8명</td><td><span class="tag t-gn">가능</span></td><td><span class="tag t-rd">불가</span></td><td><div style="background:#eee;border-radius:3px;height:8px;width:80px;overflow:hidden;display:inline-block;vertical-align:middle;"><div style="background:#1428A0;width:55%;height:100%;"></div></div> 55%</td><td><span class="tag t-or">부분 가능</span></td><td><button onclick="openRes('D동 외부협력실')" style="padding:3px 10px;background:#1428A0;color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;">예약</button></td></tr>
+            <tr><td><b>강의장 1</b></td><td>E동</td><td>3층</td><td><span class="tag t-pu">강의장</span></td><td>30명</td><td><span class="tag t-rd">불가</span></td><td><span class="tag t-gn">가능</span></td><td><div style="background:#eee;border-radius:3px;height:8px;width:80px;overflow:hidden;display:inline-block;vertical-align:middle;"><div style="background:#1428A0;width:45%;height:100%;"></div></div> 45%</td><td><span class="tag t-or">부분 가능</span></td><td><button onclick="openRes('E동 강의장 1')" style="padding:3px 10px;background:#1428A0;color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;">예약</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3 건물 비교 -->
+  <div id="t3" class="tab-content">
+    <div class="sbox">
+      <div class="shead"><div><h3>주차별 예약 상세 요약</h3><p>선택한 주차 기준 건물별 회의실 예약 현황을 분석합니다.</p></div></div>
+      <ul class="sum-li">
+        <li>선택 필터 기준 총 예약은 <b>56건</b>이며, G동 26건 / D동 18건 / E동 12건입니다.</li>
+        <li>가장 많이 이용된 회의실 타입은 <b>화상회의실</b> 29건으로 전체 대비 52%를 차지합니다.</li>
+        <li>G동이 4개 층으로 가장 많은 회의실을 보유한 건물이며, 예약률도 74%로 가장 높습니다.</li>
+        <li>E동 강의장은 대규모 인원 수용이 가능하여 워크샵·교육 수요가 집중됩니다.</li>
+        <li>전주 대비 D동 예약이 +1건 증가, G동은 -1건으로 소폭 감소했습니다.</li>
+        <li>O/X/= 경쟁력 비교 결과 G동이 전 건물 대비 예약 활용도가 가장 높습니다.</li>
+        <li>G동 O/X/= 비교 기준은 직접 비교 대상이므로, 건물별 매트릭스에서 상세 확인 바랍니다.</li>
+      </ul>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <div class="sbox" style="flex:1;">
+        <div class="shead"><div><h3>건물별 회의실 커버리지</h3></div></div>
+        <div style="padding:10px 14px;">
+          <table class="mt">
+            <thead><tr><th>건물</th><th>전체</th><th>일반</th><th>화상</th><th>강의장</th><th>주요 타입</th><th>WoW</th></tr></thead>
+            <tbody>
+              <tr><td><b>G동</b></td><td>26</td><td>9</td><td>9</td><td>8</td><td>화상회의</td><td style="color:#e53935;">-1</td></tr>
+              <tr><td><b>D동</b></td><td>18</td><td>8</td><td>3</td><td>2</td><td>일반회의</td><td style="color:#2e7d32;">+1</td></tr>
+              <tr><td><b>E동</b></td><td>12</td><td>1</td><td>1</td><td>10</td><td>강의장</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="sbox">
+      <div class="shead"><div><h3>건물별 예약 요약</h3><p>G / D / E동의 예약 현황 비교</p></div></div>
+      <div class="bc-cards">
+        <div class="bcc"><div class="bch blue"><span class="bcn">G동</span><span class="bcnum">26</span></div><div class="bcb"><div class="bcr"><span>층 수</span><span>4개 층</span></div><div class="bcr"><span>화상회의실</span><span>9건</span></div><div class="bcr"><span>예약률</span><span>74%</span></div><div style="margin-top:6px;font-size:10px;color:#888;">일반 9 · 화상 9 · 강의 8 · 기타 0</div></div></div>
+        <div class="bcc"><div class="bch gray"><span class="bcn">D동</span><span class="bcnum">18</span></div><div class="bcb"><div class="bcr"><span>층 수</span><span>3개 층</span></div><div class="bcr"><span>외부협력실</span><span>5건</span></div><div class="bcr"><span>예약률</span><span>64%</span></div><div style="margin-top:6px;font-size:10px;color:#888;">일반 8 · 화상 3 · 강의 2 · 외부 5</div></div></div>
+        <div class="bcc"><div class="bch yellow"><span class="bcn">E동</span><span class="bcnum">12</span></div><div class="bcb"><div class="bcr"><span>층 수</span><span>2개 층</span></div><div class="bcr"><span>강의장</span><span>10건</span></div><div class="bcr"><span>예약률</span><span>58%</span></div><div style="margin-top:6px;font-size:10px;color:#888;">일반 1 · 화상 1 · 강의 10</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4 이용 분석 -->
+  <div id="t4" class="tab-content">
+    <div style="display:flex;gap:12px;">
+      <div class="sbox" style="flex:1;">
+        <div class="shead"><div><h3>회의실 타입 이용 Mix</h3><p>선택 필터 기준 회의실 타입별 이용 분포입니다.</p></div></div>
+        <div class="sbody">
+          <div class="bar-item"><div class="bl">화상회의실</div><div class="bt"><div class="bf" style="width:55%;background:#1428A0;"></div><div class="bf" style="width:10%;background:#90caf9;"></div></div><div class="bv">29</div></div>
+          <div class="bar-item"><div class="bl">일반 회의실</div><div class="bt"><div class="bf" style="width:36%;background:#1428A0;"></div><div class="bf" style="width:8%;background:#90caf9;"></div></div><div class="bv">19</div></div>
+          <div class="bar-item"><div class="bl">강의장</div><div class="bt"><div class="bf" style="width:36%;background:#1428A0;"></div><div class="bf" style="width:6%;background:#aaa;"></div></div><div class="bv">19</div></div>
+          <div class="bar-item"><div class="bl">외부협력</div><div class="bt"><div class="bf" style="width:15%;background:#1428A0;"></div></div><div class="bv">8</div></div>
+          <div class="bar-item"><div class="bl">복합 공간</div><div class="bt"><div class="bf" style="width:13%;background:#1428A0;"></div></div><div class="bv">7</div></div>
+          <div class="bar-item"><div class="bl">미예약</div><div class="bt"><div class="bf" style="width:8%;background:#ccc;"></div></div><div class="bv">4</div></div>
+          <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:#666;">
+            <span><span style="background:#1428A0;display:inline-block;width:10px;height:8px;margin-right:3px;border-radius:1px;"></span>G동</span>
+            <span><span style="background:#90caf9;display:inline-block;width:10px;height:8px;margin-right:3px;border-radius:1px;"></span>D동</span>
+            <span><span style="background:#aaa;display:inline-block;width:10px;height:8px;margin-right:3px;border-radius:1px;"></span>E동</span>
+          </div>
+        </div>
+      </div>
+      <div class="sbox" style="flex:1;">
+        <div class="shead"><div><h3>O / X / = 예약 경쟁력 요약</h3><p>G동 기준 건물별 예약 활용도를 비교합니다.</p></div></div>
+        <div class="oxe-row">
+          <div class="ob"><div class="ov" style="color:#1428A0;">14</div><div class="ol">O – G동 우위</div></div>
+          <div class="ob"><div class="ov" style="color:#e53935;">4</div><div class="ol">X – D동 우위</div></div>
+          <div class="ob"><div class="ov" style="color:#888;">17</div><div class="ol">= 동등</div></div>
+        </div>
+        <div style="padding:8px 14px;">
+          <div style="background:#f5f7ff;border-radius:6px;padding:10px 12px;font-size:11px;">
+            <div style="font-weight:700;color:#1428A0;margin-bottom:5px;">Net: G동 +10 우위</div>
+            <div style="color:#555;">O14 · X4 · =17 비교 기준</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div style="padding:10px 14px;">
+          <table class="mt">
+            <thead><tr><th>건물</th><th>O</th><th>X</th><th>=</th><th>Net</th><th>판정</th></tr></thead>
+            <tbody>
+              <tr><td><b>G동</b></td><td class="win">3</td><td>1</td><td>5</td><td class="win">+2</td><td><span class="tag t-bl">G동 우위</span></td></tr>
+              <tr><td><b>D동</b></td><td>0</td><td>2</td><td>1</td><td>—</td><td><span class="tag t-gy">참고</span></td></tr>
+              <tr><td><b>E동</b></td><td>9</td><td>1</td><td>11</td><td class="win">+8</td><td><span class="tag t-bl">G동 우위</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5 변경 내역 -->
+  <div id="t5" class="tab-content">
+    <div class="sbox">
+      <div class="shead"><div><h3>전주 대비 예약 변경 내역</h3><p>W20 → W21 변경된 예약 내역입니다.</p></div><span class="scnt">변경 15건</span></div>
+      <div class="sx" style="padding:12px 14px;">
+        <table class="dt">
+          <thead><tr><th>건물</th><th>층</th><th>회의실</th><th>구분</th><th>이전 예약</th><th>변경 후</th></tr></thead>
+          <tbody>
+            <tr><td>G동</td><td>1층</td><td><b>화상회의실 1</b></td><td><span class="cbadge cbn">신규</span></td><td>—</td><td>14:00~15:30 | 주간 리뷰 (김○○)</td></tr>
+            <tr><td>G동</td><td>3층</td><td><b>대회의실</b></td><td><span class="cbadge cbch">변경</span></td><td>10:00~12:00</td><td>13:00~17:00 | 워크샵 확장</td></tr>
+            <tr><td>D동</td><td>4층</td><td><b>외부협력실</b></td><td><span class="cbadge cbc">취소</span></td><td>11:00~12:00 예약됨</td><td>취소됨 (협력사 일정 변경)</td></tr>
+            <tr><td>E동</td><td>3층</td><td><b>강의장 1</b></td><td><span class="cbadge cbn">신규</span></td><td>—</td><td>10:00~12:00 | 신입 교육 (인사팀)</td></tr>
+            <tr><td>G동</td><td>2층</td><td><b>회의실 3</b></td><td><span class="cbadge cbch">변경</span></td><td>14:00~15:00</td><td>15:00~16:00 | 시간 조정</td></tr>
+            <tr><td>D동</td><td>2층</td><td><b>회의실 2</b></td><td><span class="cbadge cbc">취소</span></td><td>09:00~10:00 예약됨</td><td>취소됨 (재택 전환)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6 상세 분석 -->
+  <div id="t6" class="tab-content">
+    <div class="sbox">
+      <div class="shead"><div><h3>활성 예약 상세 테이블</h3><p>현재 활성화된 모든 예약의 상세 정보입니다.</p></div><span class="scnt">총 8건</span></div>
+      <div class="sx" style="padding:12px 14px;">
+        <table class="dt">
+          <thead><tr><th>건물</th><th>예약 유형</th><th>Plan</th><th>타입</th><th>회의실</th><th>예약 상세</th></tr></thead>
+          <tbody>
+            <tr><td>G동</td><td>정기</td><td>주간 리뷰</td><td><span class="tag t-bl">화상</span></td><td><b>화상회의실 1</b></td><td>매주 월 14:00~15:30 / 김○○ 팀 / 최대 8명</td></tr>
+            <tr><td>G동</td><td>신규</td><td>기획 미팅</td><td><span class="tag t-gy">일반</span></td><td><b>회의실 3</b></td><td>금 15:00~16:00 / 박○○ / 최대 10명</td></tr>
+            <tr><td>G동</td><td>정기</td><td>워크샵</td><td><span class="tag t-pu">강의장</span></td><td><b>대회의실</b></td><td>수 13:00~17:00 / 인사팀 / 최대 20명</td></tr>
+            <tr><td>D동</td><td>신규</td><td>협력 미팅</td><td><span class="tag t-or">외부협력</span></td><td><b>외부협력실</b></td><td>목 14:00~15:00 / 전략팀 / 최대 8명</td></tr>
+            <tr><td>E동</td><td>신규</td><td>신입 교육</td><td><span class="tag t-pu">강의장</span></td><td><b>강의장 1</b></td><td>화 10:00~12:00 / 인사팀 / 최대 30명</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sbox">
+      <div class="shead"><div><h3>회의실 수용 인원 Pin-to-Pin 분석</h3><p>건물·타입별 수용 인원 기준으로 가장 적합한 회의실을 비교합니다.</p></div><button style="font-size:11px;padding:4px 10px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;cursor:pointer;">목록 다시보기</button></div>
+      <div class="p2p-kpi">
+        <div class="p2pb"><div class="pv">16</div><div class="pl">비교 기준 P2P</div></div>
+        <div class="p2pb hl"><div class="pv">13</div><div class="pl">G동 우위</div></div>
+        <div class="p2pb"><div class="pv">0</div><div class="pl">D동 우위</div></div>
+        <div class="p2pb"><div class="pv">0</div><div class="pl">E동 우위</div></div>
+        <div class="p2pb"><div class="pv">23</div><div class="pl">전반적 노출</div></div>
+      </div>
+      <div style="padding:0 14px 12px;font-size:11px;color:#555;line-height:1.8;border-top:1px solid #f0f0f0;padding-top:10px;">
+        • 인원 분석 결과 총 16건의 P2P 비교 항목 중, G동이 13건에서 최적 회의실로 선정되었습니다.<br>
+        • 가장 수요가 많은 인원 기준은 6~8명이며, G동 화상회의실이 이 구간 커버리지가 가장 높습니다.<br>
+        • 전체 23개 비교 항목 중 16개가 직접 Pin-to-Pin 비교 가능 조건에 해당합니다.
+      </div>
+      <div class="divider"></div>
+      <div style="padding:12px 14px;font-size:12px;font-weight:700;color:#333;">수용 인원별 최적 회의실</div>
+      <div class="sx" style="padding:0 14px 12px;">
+        <table class="gap-t">
+          <thead><tr><th>인원 구분</th><th>인원 범위</th><th>G동 최적</th><th>D동 최적</th><th>E동 최적</th></tr></thead>
+          <tbody>
+            <tr><td class="pr">소규모</td><td>1~4명</td><td class="best">회의실 2 (2층)</td><td>회의실 1 (1층)</td><td>—</td></tr>
+            <tr><td class="pr">중소규모</td><td>5~8명</td><td class="best">회의실 1 (4층)</td><td>회의실 3 (3층)</td><td>—</td></tr>
+            <tr><td class="pr">중규모</td><td>9~14명</td><td class="best">화상회의실 1 (1층)</td><td>—</td><td>—</td></tr>
+            <tr><td class="pr">대규모</td><td>15~25명</td><td class="best">대회의실 (3~4층)</td><td>—</td><td>강의장 2 (2층)</td></tr>
+            <tr><td class="pr">초대형</td><td>26명+</td><td>—</td><td>—</td><td class="best">강의장 1 (3층)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sbox">
+      <div class="shead"><div><h3>Pin-to-Pin 상세</h3><p>모든 조건에서 수용 가능 기준으로 최적 회의실을 비교합니다.</p></div></div>
+      <div class="sx" style="padding:12px 14px;">
+        <table class="dt">
+          <thead><tr><th>건물</th><th>예약유형</th><th>수용인원</th><th>G동 최적</th><th>D동 최적</th><th>E동 최적</th><th>Best Gap</th><th>판정</th><th>O/X/=</th></tr></thead>
+          <tbody>
+            <tr><td>G동</td><td>신규</td><td>소규모 (1~4명)</td><td><b>회의실 2 (2층)</b> 최대 4명</td><td>회의실 1 최대 6명</td><td>—</td><td style="color:#2e7d32;">G동 우위</td><td><span class="tag t-bl">G동 우위</span></td><td><span class="tag t-bl">O</span></td></tr>
+            <tr><td>G동</td><td>신규</td><td>중소규모 (5~8명)</td><td><b>화상회의실 1</b> 최대 8명</td><td>—</td><td>—</td><td style="color:#2e7d32;">G동 단독</td><td><span class="tag t-gy">G동 단독</span></td><td><span class="tag t-bl">O</span></td></tr>
+            <tr><td>D동</td><td>신규</td><td>외부협력 (6~10명)</td><td>—</td><td><b>외부협력실</b> 최대 8명</td><td>—</td><td>—</td><td><span class="tag t-or">D동 단독</span></td><td><span style="color:#888;">=</span></td></tr>
+            <tr><td>E동</td><td>신규</td><td>대형 (20~30명)</td><td>대회의실 최대 20명</td><td>—</td><td><b>강의장 1</b> 최대 30명</td><td>E동 +10명</td><td><span class="tag t-bl">E동 우위</span></td><td><span class="tag t-bl">O</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 예약 모달 -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;padding:24px;width:400px;box-shadow:0 8px 30px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="font-size:14px;font-weight:700;" id="mTitle">회의실 예약</h3>
+      <button onclick="closeM()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#888;">✕</button>
+    </div>
+    <div style="margin-bottom:10px;"><label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">회의실</label><input id="mRoom" type="text" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:12px;background:#f8f9fc;" readonly></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <div style="flex:1;"><label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">날짜 <span style="color:red;">*</span></label><input type="date" value="2026-05-25" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:12px;font-family:inherit;"></div>
+      <div style="flex:1;"><label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">인원 <span style="color:red;">*</span></label><input type="number" min="1" max="30" placeholder="명" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:12px;font-family:inherit;"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <div style="flex:1;"><label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">시작 시간 <span style="color:red;">*</span></label><input type="time" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:12px;font-family:inherit;"></div>
+      <div style="flex:1;"><label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">종료 시간 <span style="color:red;">*</span></label><input type="time" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:12px;font-family:inherit;"></div>
+    </div>
+    <div style="margin-bottom:16px;"><label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">회의 목적</label><input type="text" placeholder="예: 주간 팀 미팅" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:5px;font-size:12px;font-family:inherit;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="closeM()" style="padding:8px 18px;background:#f0f0f0;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:inherit;">취소</button>
+      <button onclick="doRes()" style="padding:8px 18px;background:#1428A0;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:700;">예약 확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function swTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+function swBld(b,btn){
+  ['G','D','E'].forEach(x=>{
+    const s=document.getElementById('sec'+x);
+    if(s) s.style.display=(x===b?'block':'none');
+  });
+  ['btG','btD','btE'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.style.borderColor='#ddd';el.style.color='#888';el.style.fontWeight='400';}
+  });
+  btn.style.borderColor='#1428A0';btn.style.color='#1428A0';btn.style.fontWeight='700';
+}
+function chkAll(ids,v){ids.forEach(id=>{document.getElementById(id).checked=v;});filterUpdate();}
+function filterUpdate(){
+  document.getElementById('bldCnt').textContent=['cbG','cbD','cbE'].filter(id=>document.getElementById(id).checked).length+'/3';
+  document.getElementById('flrCnt').textContent=['f1','f2','f3','f4'].filter(id=>document.getElementById(id).checked).length+'/4';
+  document.getElementById('typCnt').textContent=['tN','tV','tL','tX','tM'].filter(id=>document.getElementById(id).checked).length+'/5';
+}
+function openRes(room){
+  document.getElementById('mTitle').textContent=room+' 예약';
+  document.getElementById('mRoom').value=room;
+  document.getElementById('modal').style.display='flex';
+}
+function closeM(){document.getElementById('modal').style.display='none';}
+function doRes(){alert('예약이 접수되었습니다.\nSmart City 예약 사이트에서 최종 확인해 주세요.');closeM();}
+</script>
+</body>
+</html>
